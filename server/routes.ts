@@ -1,23 +1,19 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
-import session from "express-session";
 import { storage } from "./storage";
 import { insertMessageSchema, insertProjectSchema, insertSkillSchema, insertExperienceSchema } from "@shared/schema";
+import { signToken, verifyToken, requireAdmin } from "./auth";
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin123";
+
+const toId = (param: string | string[]): number => parseInt(Array.isArray(param) ? param[0] : param, 10);
+const toStr = (param: string | string[]): string => Array.isArray(param) ? param[0] : param;
 
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
-  app.use(
-    session({
-      secret: process.env.SESSION_SECRET || "portfolio-secret-key",
-      resave: false,
-      saveUninitialized: false,
-      cookie: { secure: false, maxAge: 24 * 60 * 60 * 1000 },
-    })
-  );
+
 
   app.get("/api/projects", async (_req: Request, res: Response) => {
     const projects = await storage.getProjects();
@@ -25,7 +21,7 @@ export async function registerRoutes(
   });
 
   app.get("/api/projects/:slug", async (req: Request, res: Response) => {
-    const project = await storage.getProjectBySlug(req.params.slug);
+    const project = await storage.getProjectBySlug(toStr(req.params.slug));
     if (!project) return res.status(404).json({ message: "Project not found" });
     res.json(project);
   });
@@ -48,26 +44,30 @@ export async function registerRoutes(
   });
 
   app.post("/api/admin/login", (req: Request, res: Response) => {
-    if (req.body.password === ADMIN_PASSWORD) {
-      (req.session as any).admin = true;
-      return res.json({ success: true });
+    if (req.body.password !== ADMIN_PASSWORD) {
+      return res.status(401).json({ message: "Invalid password" });
     }
-    res.status(401).json({ message: "Invalid password" });
+
+    const token = signToken({ userId: 1, role: "admin" });
+    return res.json({ success: true, token });
   });
 
-  app.post("/api/admin/logout", (req: Request, res: Response) => {
-    req.session.destroy(() => {});
+
+  app.post("/api/admin/logout", (_req: Request, res: Response) => {
     res.json({ success: true });
   });
 
   app.get("/api/admin/check", (req: Request, res: Response) => {
-    res.json({ authenticated: !!(req.session as any)?.admin });
+    const authHeader = req.headers.authorization;
+    if (!authHeader?.startsWith("Bearer ")) {
+      return res.status(401).json({ authenticated: false });
+    }
+    const payload = verifyToken(authHeader.slice(7));
+    if (!payload) {
+      return res.status(401).json({ authenticated: false });
+    }
+    return res.json({ authenticated: true, role: payload.role });
   });
-
-  function requireAdmin(req: Request, res: Response, next: () => void) {
-    if (!(req.session as any)?.admin) return res.status(401).json({ message: "Unauthorized" });
-    next();
-  }
 
   app.get("/api/admin/messages", requireAdmin, async (_req: Request, res: Response) => {
     const messages = await storage.getMessages();
@@ -75,12 +75,12 @@ export async function registerRoutes(
   });
 
   app.patch("/api/admin/messages/:id", requireAdmin, async (req: Request, res: Response) => {
-    await storage.updateMessageRead(parseInt(req.params.id), req.body.read);
+    await storage.updateMessageRead(toId(req.params.id), req.body.read);
     res.json({ success: true });
   });
 
   app.delete("/api/admin/messages/:id", requireAdmin, async (req: Request, res: Response) => {
-    await storage.deleteMessage(parseInt(req.params.id));
+    await storage.deleteMessage(toId(req.params.id));
     res.json({ success: true });
   });
 
@@ -92,12 +92,12 @@ export async function registerRoutes(
   });
 
   app.patch("/api/admin/projects/:id", requireAdmin, async (req: Request, res: Response) => {
-    const project = await storage.updateProject(parseInt(req.params.id), req.body);
+    const project = await storage.updateProject(toId(req.params.id), req.body);
     res.json(project);
   });
 
   app.delete("/api/admin/projects/:id", requireAdmin, async (req: Request, res: Response) => {
-    await storage.deleteProject(parseInt(req.params.id));
+    await storage.deleteProject(toId(req.params.id));
     res.json({ success: true });
   });
 
@@ -109,12 +109,12 @@ export async function registerRoutes(
   });
 
   app.patch("/api/admin/skills/:id", requireAdmin, async (req: Request, res: Response) => {
-    const skill = await storage.updateSkill(parseInt(req.params.id), req.body);
+    const skill = await storage.updateSkill(toId(req.params.id), req.body);
     res.json(skill);
   });
 
   app.delete("/api/admin/skills/:id", requireAdmin, async (req: Request, res: Response) => {
-    await storage.deleteSkill(parseInt(req.params.id));
+    await storage.deleteSkill(toId(req.params.id));
     res.json({ success: true });
   });
 
@@ -126,12 +126,12 @@ export async function registerRoutes(
   });
 
   app.patch("/api/admin/experiences/:id", requireAdmin, async (req: Request, res: Response) => {
-    const experience = await storage.updateExperience(parseInt(req.params.id), req.body);
+    const experience = await storage.updateExperience(toId(req.params.id), req.body);
     res.json(experience);
   });
 
   app.delete("/api/admin/experiences/:id", requireAdmin, async (req: Request, res: Response) => {
-    await storage.deleteExperience(parseInt(req.params.id));
+    await storage.deleteExperience(toId(req.params.id));
     res.json({ success: true });
   });
 
