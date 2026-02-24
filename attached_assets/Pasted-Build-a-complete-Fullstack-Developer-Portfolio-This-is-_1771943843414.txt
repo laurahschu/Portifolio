@@ -1,0 +1,103 @@
+Build a complete Fullstack Developer Portfolio. This is not a static site; it is a dynamic web application with a custom Content Management System (CMS), live API integrations, advanced UI animations, and a flawless architecture. 
+
+The system must be production-ready, cleanly structured, and follow best practices. It must be beautifully designed and follow Senior-level standards.
+
+### 1. Tech Stack
+Choose the following modern, high-performance stack:
+* Framework: Next.js 14+ (App Router)
+* Language: TypeScript (Strict mode enabled)
+* Database: PostgreSQL (Supabase or Vercel Postgres)
+* ORM: Prisma or Drizzle ORM
+* Styling: Tailwind CSS + UI components (Shadcn/UI or Aceternity UI)
+* Animations: Framer Motion (for smooth page transitions and scroll reveals)
+* State Management: Zustand (if needed) or React Context for themes
+* Email System: Resend or Nodemailer
+* Validation: Zod + React Hook Form
+* Authentication: NextAuth.js (Auth.js) - strictly for the hidden Admin CMS.
+
+The architecture must be modular, highly scalable, and SEO-optimized.
+
+### 2. User Roles & Authentication
+Implement a hidden authentication system:
+* Public Viewer: Can browse the portfolio, interact with elements, and send contact messages.
+* Admin (Owner): Secured route (/admin). Requires login (GitHub OAuth or Magic Link) to access the CMS to add/edit projects, update skills, and read messages.
+
+### 3. Core System Requirements (Database Models)
+The portfolio must be data-driven. Include the following models:
+* Project: id, title, slug, description, content (Markdown/Rich Text), image_url, github_url, live_url, tech_stack (Array of strings), featured (boolean), created_at.
+* Skill: id, name, category (Frontend, Backend, DevOps, Tools), icon_url, proficiency (1-100).
+* Experience: id, company, role, start_date, end_date (nullable), description, achievements (Array of strings).
+* Message (Contact): id, sender_name, sender_email, subject, message, read (boolean), created_at.
+
+### 4. Dynamic Live Integrations
+To show advanced backend skills, the portfolio must fetch real-time data:
+* GitHub API: Fetch and display real-time contribution graph, total stars, and latest commits.
+* Spotify API (Now Playing): A real-time widget showing the song currently playing or the last played track.
+* WakaTime API (Optional): Display coding stats (languages used this week, total hours coded).
+
+### 5. Interfaces: Public Side
+The public portfolio must include:
+* Header/Navbar: Must include a visible, elegant Language Toggle (PT-BR / EN) at the top of the page so users can easily switch the site's language.
+* Hero Section: High-impact introduction, dynamic typing effect, and call-to-action.
+* About & Experience Timeline: Chronological timeline fetching data from the Experience model.
+* Bento Grid Layout for Skills: A modern, asymmetrical grid displaying skills, GitHub stats, and Spotify widget.
+* Projects Gallery: Advanced filtering (by tech stack, category). Includes smooth layout animations when filtering.
+* Project Detail Page (/projects/[slug]): Dynamic routing, Server-Side Rendered for SEO, reading full markdown content.
+* Footer: Must include a clean, professional footer at the bottom stating "© 2026 Laura Hahn Schu. All rights reserved." (Keep it minimalist and authoritative, no emojis or hearts).
+
+### 6. Interfaces: Admin CMS Side
+A secure, private dashboard (/admin) to manage the portfolio without touching code:
+* Overview Dashboard: Unread messages counter, total projects, and quick actions.
+* Messages Kanban/List: View contact form submissions, mark as read/unread, delete.
+* Content Editor: Forms to Add, EDIT (explicitly ensure there is an option to modify existing entries, pre-filling data to update them, not just add new ones), and Delete Projects, Skills, and Experiences.
+
+### 7. Advanced UI/UX (The "Wow" Factor) & Theming
+* Command Palette (Cmd+K / Ctrl+K): Implement a global search modal to navigate between pages, switch themes, or jump to specific projects instantly.
+* Custom Cursor & Scroll Progress: Subtle UI enhancements that don't hurt performance.
+* Loading States & Skeletons: Skeleton loaders for dynamic data (GitHub/Spotify/Projects) to avoid layout shifts.
+* Aesthetic & Theme (Feminine & Badass): The design must break stereotypes, proving female developers build high-performance, authoritative software. 
+    * To make these colors work perfectly with Dark/Light mode, YOU MUST USE CSS Variables in `globals.css` mapped to the `tailwind.config.ts`.
+    * Light Mode: Use `#fff2fa` for the background.
+    * Accents (Pinks): Use `#ff57ca` and `#de5097` for primary accents, active states, and buttons.
+    * Contrasts (Teal/Aqua): Use `#69dbd7`, `#9aedec`, and `#3bccc7` for subtle details, badges, and hover effects.
+    * Dark Mode: Seamless toggle with system preference detection. Use a dark graphite/almost black background where the pinks and teals create a vibrant, modern contrast (cyberpunk soft aesthetic). The vibe must be highly professional, modern, and striking.
+
+### 8. Contact System & Notifications
+* Contact Form: Client-side validation using Zod.
+* Database Storage: Save incoming messages to the Message table.
+* Email Forwarding: Trigger an API route that uses Resend to forward the message to the owner's personal email instantly.
+* Toast Notifications: Show sleek success/error toast messages upon submission.
+
+### 9. Code Quality, Architecture & SEO
+* Clean folder structure (/app, /components, /lib, /server, /actions).
+* Extensive use of React Server Components (RSC) and Server Actions for data mutations.
+* Strict TypeScript interfaces for all data.
+* Environment variables properly configured (.env.example).
+* Flawless 100/100 Lighthouse score (Performance, Accessibility, SEO).
+* Global Metadata & Favicon: Explicitly configure Next.js metadata in `layout.tsx` to override any default platform icons (like Replit's). Use this exact URL for the favicon/icon: `https://cdn-icons-png.flaticon.com/512/11813/11813431.png`.
+
+### 10. Internationalization (i18n) & Bonus Features
+* Default Language: The portfolio MUST be initially built and fully populated in Portuguese (PT-BR). 
+* i18n Architecture: Implement high-performance and easy internationalization (i18n) using a modern Next.js library to toggle between Portuguese and English.
+* Terminal/CLI Easter Egg: A hidden route or component where users can type commands (e.g., whoami, ls projects) to interact with the portfolio via text.
+* 3D Element: A simple, interactive React Three Fiber (Three.js) model in the Hero section (e.g., a floating geometric shape that follows mouse movement).
+
+--- SEED DATA FOR THE PORTFOLIO ---
+
+Headline/Role: Fullstack Developer | Computer Scientist
+
+Short Bio: Proactive Fullstack Developer and Computer Scientist driven by challenges, focused on elevating delivery quality and solving operational bottlenecks. I have strong experience implementing CI/CD pipelines, scalable APIs, and responsive interfaces. 
+
+GitHub URL: https://github.com/laurahschu
+LinkedIn URL: https://www.linkedin.com/in/laura-hahn-schu-85b895244/
+Email for Contact Form: lauraschuwork@gmail.com 
+Whatsapp URL: https://w.app/swsd9u
+Primary Tech Stack: C#, .NET, TypeScript, Node.js, React, PostgreSQL, Docker, and Tailwind CSS. 
+
+Featured Project 1: Internal Ticket Manager - A complete helpdesk system featuring a Kanban board, robust state management, and role-based access control. Note for AI: This project is private/internal, so omit the live_url and github_url. Instead, generate placeholders for high-quality screenshots in the image_url field to showcase the UI. Built with Node.js, TypeScript, Drizzle ORM, React, Docker, and Nginx.
+
+Featured Project 2: ERP Backend Architecture - Maintenance and evolution of a robust Enterprise Resource Planning system. Developed complex back-end features, custom RDLC reports, and heavily optimized SQL queries using C#, VB.NET, ASP.NET Web Forms, and Entity Framework. Shows deep mastery of the Microsoft ecosystem and legacy system modernization.
+
+Featured Project 3: Paperless API (Sustainable Innovation) - A complete RESTful API built with C# and .NET designed to fully digitize office workflows and eliminate paper usage. Included end-to-end process automation, SQL Server reporting integrations, and rapid prototyping. Showcases backend architecture and business-driven innovation.
+
+
