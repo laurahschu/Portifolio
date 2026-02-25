@@ -3,5 +3,15 @@ dist
 .DS_Store
 server/public
 vite.config.ts.*
-.env
 *.tar.gz
+.env*
+*.sql
+backup_*/
+android/build/
+android/.gradle/
+*.apk
+tests/
+test_*.js
+check_raw_statuses.js
+run_recreate_audit.js
+unify_statuses.js
