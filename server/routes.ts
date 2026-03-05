@@ -1,7 +1,7 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertMessageSchema, insertProjectSchema, insertSkillSchema, insertExperienceSchema } from "@shared/schema";
+import { insertMessageSchema, insertProjectSchema, insertSkillSchema, insertExperienceSchema, insertProfileSchema } from "@shared/schema";
 import { signToken, verifyToken, requireAdmin } from "./auth";
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin123";
@@ -86,13 +86,21 @@ export async function registerRoutes(
 
   app.post("/api/admin/projects", requireAdmin, async (req: Request, res: Response) => {
     const parsed = insertProjectSchema.safeParse(req.body);
-    if (!parsed.success) return res.status(400).json({ message: "Invalid data" });
+    if (!parsed.success) {
+      console.error("[POST /api/admin/projects] Validation error:", parsed.error.flatten());
+      return res.status(400).json({ message: "Invalid data", errors: parsed.error.flatten() });
+    }
     const project = await storage.createProject(parsed.data);
     res.json(project);
   });
 
   app.patch("/api/admin/projects/:id", requireAdmin, async (req: Request, res: Response) => {
-    const project = await storage.updateProject(toId(req.params.id), req.body);
+    const parsed = insertProjectSchema.partial().safeParse(req.body);
+    if (!parsed.success) {
+      console.error("[PATCH /api/admin/projects] Validation error:", parsed.error.flatten());
+      return res.status(400).json({ message: "Invalid data", errors: parsed.error.flatten() });
+    }
+    const project = await storage.updateProject(toId(req.params.id), parsed.data);
     res.json(project);
   });
 
@@ -133,6 +141,24 @@ export async function registerRoutes(
   app.delete("/api/admin/experiences/:id", requireAdmin, async (req: Request, res: Response) => {
     await storage.deleteExperience(toId(req.params.id));
     res.json({ success: true });
+  });
+
+  // ---------------------------------------------------------------------------
+  // Profile (singleton)
+  // ---------------------------------------------------------------------------
+
+  app.get("/api/profile", async (_req: Request, res: Response) => {
+    const result = await storage.getProfile();
+    res.json(result ?? null);
+  });
+
+  app.patch("/api/admin/profile", requireAdmin, async (req: Request, res: Response) => {
+    const parsed = insertProfileSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ message: "Invalid data", errors: parsed.error.flatten() });
+    }
+    const updated = await storage.upsertProfile(parsed.data);
+    res.json(updated);
   });
 
   return httpServer;

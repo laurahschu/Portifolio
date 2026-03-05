@@ -10,7 +10,7 @@ import { ExternalLink, Github, ArrowRight, Star } from "lucide-react";
 import { Link } from "wouter";
 
 export function ProjectsSection() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const [activeFilter, setActiveFilter] = useState("All");
 
   const { data: projects, isLoading } = useQuery<Project[]>({
@@ -104,22 +104,22 @@ export function ProjectsSection() {
                     {project.imageUrl ? (
                       <img
                         src={project.imageUrl}
-                        alt={project.title}
+                        alt={project.title?.[lang] ?? project.title?.pt ?? ""}
                         className="w-full h-full object-cover rounded-t-md"
                       />
                     ) : (
                       <div className="text-4xl font-serif font-bold text-primary/20">
-                        {project.title.charAt(0)}
+                        {(project.title?.[lang] ?? project.title?.pt ?? "").charAt(0)}
                       </div>
                     )}
                   </div>
 
                   <div className="p-5 flex flex-col flex-1">
                     <h3 className="font-serif font-semibold text-lg mb-2 group-hover:text-primary transition-colors">
-                      {project.title}
+                      {project.title?.[lang] ?? project.title?.pt ?? ""}
                     </h3>
                     <p className="text-sm text-muted-foreground mb-4 line-clamp-3 flex-1">
-                      {project.description}
+                      {project.description?.[lang] ?? project.description?.pt ?? ""}
                     </p>
 
                     <div className="flex flex-wrap gap-1 mb-4">

@@ -3,6 +3,8 @@ import { ArrowDown, Github, Linkedin, Mail, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/lib/i18n";
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const typingTexts = {
   pt: ["Fullstack Developer", "Cientista da Computação", "Solucionadora de Problemas"],
@@ -45,6 +47,12 @@ function useTypingEffect(texts: string[], speed = 80, pause = 2000) {
 export function HeroSection() {
   const { lang, t } = useI18n();
   const typedText = useTypingEffect(typingTexts[lang]);
+
+  const { data: profileData, isLoading: profileLoading } = useQuery<{ bio: { pt: string; en: string } }>({
+    queryKey: ["/api/profile"],
+  });
+
+  const bio = profileData?.bio?.[lang] ?? profileData?.bio?.pt ?? t("hero.bio");
 
   const scrollToProjects = () => {
     document.getElementById("projects")?.scrollIntoView({ behavior: "smooth" });
@@ -101,10 +109,16 @@ export function HeroSection() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
-            className="max-w-xl text-muted-foreground text-sm sm:text-base leading-relaxed mb-8"
+            className="max-w-2xl mx-auto text-muted-foreground text-sm sm:text-base leading-relaxed mb-8 text-balance"
             data-testid="text-hero-bio"
           >
-            {t("hero.bio")}
+            {profileLoading ? (
+              <span className="flex flex-col gap-2">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-5/6" />
+                <Skeleton className="h-4 w-4/6" />
+              </span>
+            ) : bio}
           </motion.p>
 
           <motion.div

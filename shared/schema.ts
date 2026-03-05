@@ -1,14 +1,30 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, boolean, integer, timestamp, serial } from "drizzle-orm/pg-core";
+import { pgTable, text, boolean, integer, timestamp, serial, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+/** Tipo reutilizável para campos bilíngues (PT/EN). */
+export type LocalizedText = { pt: string; en: string };
+
+/** Schema Zod reutilizável para campos bilíngues. */
+const localizedText = z.object({ pt: z.string(), en: z.string() });
+
+/** Preprocessa strings vazias/undefined/null para null — ideal para campos de URL opcionais. */
+const nullableUrl = z.preprocess(
+  (val) => (val === "" || val === undefined ? null : val),
+  z.string().url().nullable().or(z.null())
+);
+
+// ---------------------------------------------------------------------------
+// Tabelas
+// ---------------------------------------------------------------------------
+
 export const projects = pgTable("projects", {
   id: serial("id").primaryKey(),
-  title: text("title").notNull(),
+  title: jsonb("title").notNull().$type<LocalizedText>(),
   slug: text("slug").notNull().unique(),
-  description: text("description").notNull(),
-  content: text("content").notNull(),
+  description: jsonb("description").notNull().$type<LocalizedText>(),
+  content: jsonb("content").notNull().$type<LocalizedText>(),
   imageUrl: text("image_url"),
   githubUrl: text("github_url"),
   liveUrl: text("live_url"),
@@ -28,11 +44,11 @@ export const skills = pgTable("skills", {
 export const experiences = pgTable("experiences", {
   id: serial("id").primaryKey(),
   company: text("company").notNull(),
-  role: text("role").notNull(),
+  role: jsonb("role").notNull().$type<LocalizedText>(),
   startDate: text("start_date").notNull(),
   endDate: text("end_date"),
-  description: text("description").notNull(),
-  achievements: text("achievements").array().notNull().default(sql`ARRAY[]::text[]`),
+  description: jsonb("description").notNull().$type<LocalizedText>(),
+  achievements: jsonb("achievements").notNull().$type<LocalizedText>().default({ pt: "", en: "" }),
 });
 
 export const messages = pgTable("messages", {
@@ -45,10 +61,48 @@ export const messages = pgTable("messages", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
-export const insertProjectSchema = createInsertSchema(projects).omit({ id: true, createdAt: true });
+/** Singleton com configurações globais do portfólio (sempre id=1). */
+export const profile = pgTable("profile", {
+  id: serial("id").primaryKey(),
+  bio: jsonb("bio").notNull().$type<LocalizedText>(),
+});
+
+// ---------------------------------------------------------------------------
+// Schemas de inserção (Zod)
+// ---------------------------------------------------------------------------
+
+export const insertProjectSchema = z.object({
+  title: localizedText,
+  slug: z.string().min(1),
+  description: localizedText,
+  content: localizedText,
+  imageUrl: nullableUrl.optional(),
+  githubUrl: nullableUrl.optional(),
+  liveUrl: nullableUrl.optional(),
+  techStack: z.array(z.string()).optional().default([]),
+  featured: z.boolean().optional().default(false),
+});
+
 export const insertSkillSchema = createInsertSchema(skills).omit({ id: true });
-export const insertExperienceSchema = createInsertSchema(experiences).omit({ id: true });
+
+export const insertExperienceSchema = z.object({
+  company: z.string().min(1),
+  role: localizedText,
+  startDate: z.string().min(1),
+  endDate: z.string().nullable().optional(),
+  description: localizedText,
+  achievements: localizedText,
+});
+
+export const insertProfileSchema = z.object({
+  bio: localizedText,
+});
+
 export const insertMessageSchema = createInsertSchema(messages).omit({ id: true, read: true, createdAt: true });
+
+// ---------------------------------------------------------------------------
+// Tipos TypeScript
+// ---------------------------------------------------------------------------
 
 export type InsertProject = z.infer<typeof insertProjectSchema>;
 export type Project = typeof projects.$inferSelect;
@@ -58,3 +112,5 @@ export type InsertExperience = z.infer<typeof insertExperienceSchema>;
 export type Experience = typeof experiences.$inferSelect;
 export type InsertMessage = z.infer<typeof insertMessageSchema>;
 export type Message = typeof messages.$inferSelect;
+export type InsertProfile = z.infer<typeof insertProfileSchema>;
+export type Profile = typeof profile.$inferSelect;

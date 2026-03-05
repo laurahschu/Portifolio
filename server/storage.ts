@@ -1,11 +1,12 @@
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 import {
-  projects, skills, experiences, messages,
+  projects, skills, experiences, messages, profile,
   type Project, type InsertProject,
   type Skill, type InsertSkill,
   type Experience, type InsertExperience,
   type Message, type InsertMessage,
+  type Profile, type InsertProfile,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -29,6 +30,9 @@ export interface IStorage {
   createMessage(data: InsertMessage): Promise<Message>;
   updateMessageRead(id: number, read: boolean): Promise<void>;
   deleteMessage(id: number): Promise<void>;
+
+  getProfile(): Promise<Profile | undefined>;
+  upsertProfile(data: InsertProfile): Promise<Profile>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -106,6 +110,26 @@ export class DatabaseStorage implements IStorage {
 
   async deleteMessage(id: number): Promise<void> {
     await db.delete(messages).where(eq(messages.id, id));
+  }
+
+  async getProfile(): Promise<Profile | undefined> {
+    const result = await db.select().from(profile).limit(1);
+    return result[0];
+  }
+
+  async upsertProfile(data: InsertProfile): Promise<Profile> {
+    // Tenta atualizar o registro singleton (id=1); se não existir, insere.
+    const existing = await db.select().from(profile).limit(1);
+    if (existing.length > 0) {
+      const result = await db
+        .update(profile)
+        .set(data)
+        .where(eq(profile.id, existing[0].id))
+        .returning();
+      return result[0];
+    }
+    const result = await db.insert(profile).values(data).returning();
+    return result[0];
   }
 }
 

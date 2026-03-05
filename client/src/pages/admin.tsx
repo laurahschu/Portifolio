@@ -17,18 +17,26 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   LayoutDashboard, FolderOpen, Code2, Briefcase, MessageSquare,
   Plus, Pencil, Trash2, LogOut, Eye, EyeOff, Loader2, ArrowLeft,
-  Mail, CheckCircle,
+  Mail, CheckCircle, User,
 } from "lucide-react";
 import type { Project, Skill, Experience, Message } from "@shared/schema";
 
-type AdminTab = "overview" | "projects" | "skills" | "experiences" | "messages";
+type AdminTab = "overview" | "projects" | "skills" | "experiences" | "messages" | "profile";
+
+interface ProfileData {
+  id: number;
+  bio: { pt: string; en: string };
+}
 
 interface EditingProject {
   id?: number;
-  title: string;
+  titlePt: string;
+  titleEn: string;
   slug: string;
-  description: string;
-  content: string;
+  descriptionPt: string;
+  descriptionEn: string;
+  contentPt: string;
+  contentEn: string;
   imageUrl: string;
   githubUrl: string;
   liveUrl: string;
@@ -47,11 +55,14 @@ interface EditingSkill {
 interface EditingExperience {
   id?: number;
   company: string;
-  role: string;
+  rolePt: string;
+  roleEn: string;
   startDate: string;
   endDate: string;
-  description: string;
-  achievements: string;
+  descriptionPt: string;
+  descriptionEn: string;
+  achievementsPt: string;
+  achievementsEn: string;
 }
 
 export default function Admin() {
@@ -63,6 +74,8 @@ export default function Admin() {
   const [editingProject, setEditingProject] = useState<EditingProject | null>(null);
   const [editingSkill, setEditingSkill] = useState<EditingSkill | null>(null);
   const [editingExperience, setEditingExperience] = useState<EditingExperience | null>(null);
+  const [profileBioPt, setProfileBioPt] = useState("");
+  const [profileBioEn, setProfileBioEn] = useState("");
 
   const { data: authCheck, isLoading: authLoading } = useQuery<{ authenticated: boolean }>({
     queryKey: ["/api/admin/check"],
@@ -71,6 +84,18 @@ export default function Admin() {
       return res.json();
     },
   });
+
+  const { data: profileData } = useQuery<ProfileData>({
+    queryKey: ["/api/profile"],
+  });
+
+  // Sincroniza os campos do formulário com os dados carregados do banco
+  useEffect(() => {
+    if (profileData?.bio) {
+      setProfileBioPt(profileData.bio.pt ?? "");
+      setProfileBioEn(profileData.bio.en ?? "");
+    }
+  }, [profileData]);
 
   const { data: projects } = useQuery<Project[]>({ queryKey: ["/api/projects"] });
   const { data: skills } = useQuery<Skill[]>({ queryKey: ["/api/skills"] });
@@ -91,11 +116,15 @@ export default function Admin() {
   const saveProject = useMutation({
     mutationFn: async (data: EditingProject) => {
       const body = {
-        ...data,
+        title: { pt: data.titlePt, en: data.titleEn },
+        slug: data.slug,
+        description: { pt: data.descriptionPt, en: data.descriptionEn },
+        content: { pt: data.contentPt, en: data.contentEn },
         techStack: data.techStack.split(",").map((s) => s.trim()).filter(Boolean),
         imageUrl: data.imageUrl || null,
         githubUrl: data.githubUrl || null,
         liveUrl: data.liveUrl || null,
+        featured: data.featured,
       };
       if (data.id) {
         await apiRequest("PATCH", `/api/admin/projects/${data.id}`, body);
@@ -147,9 +176,12 @@ export default function Admin() {
   const saveExperience = useMutation({
     mutationFn: async (data: EditingExperience) => {
       const body = {
-        ...data,
+        company: data.company,
+        role: { pt: data.rolePt, en: data.roleEn },
+        startDate: data.startDate,
         endDate: data.endDate || null,
-        achievements: data.achievements.split("\n").map((s) => s.trim()).filter(Boolean),
+        description: { pt: data.descriptionPt, en: data.descriptionEn },
+        achievements: { pt: data.achievementsPt, en: data.achievementsEn },
       };
       if (data.id) {
         await apiRequest("PATCH", `/api/admin/experiences/${data.id}`, body);
@@ -195,11 +227,25 @@ export default function Admin() {
 
   const sideItems: { key: AdminTab; icon: any; label: string }[] = [
     { key: "overview", icon: LayoutDashboard, label: t("admin.overview") },
+    { key: "profile", icon: User, label: "Profile" },
     { key: "projects", icon: FolderOpen, label: t("admin.projects") },
     { key: "skills", icon: Code2, label: t("admin.skills") },
     { key: "experiences", icon: Briefcase, label: t("admin.experiences") },
     { key: "messages", icon: MessageSquare, label: `${t("admin.messages")}${unreadCount > 0 ? ` (${unreadCount})` : ""}` },
   ];
+
+  const saveProfile = useMutation({
+    mutationFn: async () => {
+      await apiRequest("PATCH", "/api/admin/profile", {
+        bio: { pt: profileBioPt, en: profileBioEn },
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/profile"] });
+      toast({ title: "Profile saved!" });
+    },
+    onError: () => toast({ title: "Error saving profile", variant: "destructive" }),
+  });
 
   return (
     <div className="min-h-screen bg-background">
@@ -271,12 +317,64 @@ export default function Admin() {
             </motion.div>
           )}
 
+          {tab === "profile" && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+              <h1 className="text-2xl font-serif font-bold mb-6 flex items-center gap-2">
+                <User className="h-5 w-5 text-primary" />
+                Profile
+              </h1>
+
+              <div className="bg-card/40 rounded-md border border-border/30 p-6 space-y-5">
+                <p className="text-sm text-muted-foreground">
+                  O texto abaixo aparece na seção Hero da página inicial, logo abaixo do seu nome.
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <Label>Bio / Sobre mim (PT) 🇧🇷</Label>
+                    <Textarea
+                      className="min-h-[140px] mt-1.5"
+                      value={profileBioPt}
+                      onChange={(e) => setProfileBioPt(e.target.value)}
+                      placeholder="Texto em Português..."
+                      data-testid="input-profile-bio-pt"
+                    />
+                  </div>
+                  <div>
+                    <Label>Bio / About (EN) 🇬🇧</Label>
+                    <Textarea
+                      className="min-h-[140px] mt-1.5"
+                      value={profileBioEn}
+                      onChange={(e) => setProfileBioEn(e.target.value)}
+                      placeholder="English text..."
+                      data-testid="input-profile-bio-en"
+                    />
+                  </div>
+                </div>
+
+                <Button
+                  onClick={() => saveProfile.mutate()}
+                  disabled={saveProfile.isPending}
+                  data-testid="button-save-profile"
+                >
+                  {saveProfile.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {t("admin.save")}
+                </Button>
+              </div>
+            </motion.div>
+          )}
+
           {tab === "projects" && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               <div className="flex items-center justify-between gap-2 mb-6">
                 <h1 className="text-2xl font-serif font-bold">{t("admin.projects")}</h1>
                 <Button
-                  onClick={() => setEditingProject({ title: "", slug: "", description: "", content: "", imageUrl: "", githubUrl: "", liveUrl: "", techStack: "", featured: false })}
+                  onClick={() => setEditingProject({
+                    titlePt: "", titleEn: "", slug: "",
+                    descriptionPt: "", descriptionEn: "",
+                    contentPt: "", contentEn: "",
+                    imageUrl: "", githubUrl: "", liveUrl: "", techStack: "", featured: false,
+                  })}
                   data-testid="button-add-project"
                 >
                   <Plus className="mr-2 h-4 w-4" /> {t("admin.add")}
@@ -285,19 +383,59 @@ export default function Admin() {
 
               {editingProject && (
                 <div className="bg-card/40 rounded-md border border-border/30 p-6 mb-6 space-y-4">
+
+                  {/* Título (bilíngue) */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div><Label>Title</Label><Input value={editingProject.title} onChange={(e) => setEditingProject({ ...editingProject, title: e.target.value })} data-testid="input-project-title" /></div>
-                    <div><Label>Slug</Label><Input value={editingProject.slug} onChange={(e) => setEditingProject({ ...editingProject, slug: e.target.value })} data-testid="input-project-slug" /></div>
+                    <div>
+                      <Label>Título (PT) 🇧🇷</Label>
+                      <Input value={editingProject.titlePt} onChange={(e) => setEditingProject({ ...editingProject, titlePt: e.target.value })} data-testid="input-project-title-pt" />
+                    </div>
+                    <div>
+                      <Label>Title (EN) 🇬🇧</Label>
+                      <Input value={editingProject.titleEn} onChange={(e) => setEditingProject({ ...editingProject, titleEn: e.target.value })} data-testid="input-project-title-en" />
+                    </div>
                   </div>
-                  <div><Label>Description</Label><Textarea value={editingProject.description} onChange={(e) => setEditingProject({ ...editingProject, description: e.target.value })} data-testid="input-project-description" /></div>
-                  <div><Label>Content (Markdown)</Label><Textarea className="min-h-[120px]" value={editingProject.content} onChange={(e) => setEditingProject({ ...editingProject, content: e.target.value })} data-testid="input-project-content" /></div>
+
+                  {/* Slug */}
+                  <div>
+                    <Label>Slug</Label>
+                    <Input value={editingProject.slug} onChange={(e) => setEditingProject({ ...editingProject, slug: e.target.value })} data-testid="input-project-slug" />
+                  </div>
+
+                  {/* Descrição (bilíngue) */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <Label>Descrição (PT) 🇧🇷</Label>
+                      <Textarea value={editingProject.descriptionPt} onChange={(e) => setEditingProject({ ...editingProject, descriptionPt: e.target.value })} data-testid="input-project-description-pt" />
+                    </div>
+                    <div>
+                      <Label>Description (EN) 🇬🇧</Label>
+                      <Textarea value={editingProject.descriptionEn} onChange={(e) => setEditingProject({ ...editingProject, descriptionEn: e.target.value })} data-testid="input-project-description-en" />
+                    </div>
+                  </div>
+
+                  {/* Conteúdo (bilíngue) */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <Label>Conteúdo (PT) 🇧🇷</Label>
+                      <Textarea className="min-h-[120px]" value={editingProject.contentPt} onChange={(e) => setEditingProject({ ...editingProject, contentPt: e.target.value })} data-testid="input-project-content-pt" />
+                    </div>
+                    <div>
+                      <Label>Content (EN) 🇬🇧</Label>
+                      <Textarea className="min-h-[120px]" value={editingProject.contentEn} onChange={(e) => setEditingProject({ ...editingProject, contentEn: e.target.value })} data-testid="input-project-content-en" />
+                    </div>
+                  </div>
+
+                  {/* URLs */}
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div><Label>Image URL</Label><Input value={editingProject.imageUrl} onChange={(e) => setEditingProject({ ...editingProject, imageUrl: e.target.value })} /></div>
                     <div><Label>GitHub URL</Label><Input value={editingProject.githubUrl} onChange={(e) => setEditingProject({ ...editingProject, githubUrl: e.target.value })} /></div>
                     <div><Label>Live URL</Label><Input value={editingProject.liveUrl} onChange={(e) => setEditingProject({ ...editingProject, liveUrl: e.target.value })} /></div>
                   </div>
+
                   <div><Label>Tech Stack (comma-separated)</Label><Input value={editingProject.techStack} onChange={(e) => setEditingProject({ ...editingProject, techStack: e.target.value })} data-testid="input-project-techstack" /></div>
                   <div className="flex items-center gap-2"><Switch checked={editingProject.featured} onCheckedChange={(v) => setEditingProject({ ...editingProject, featured: v })} /><Label>Featured</Label></div>
+
                   <div className="flex gap-2">
                     <Button onClick={() => saveProject.mutate(editingProject)} disabled={saveProject.isPending} data-testid="button-save-project">
                       {saveProject.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}{t("admin.save")}
@@ -311,15 +449,26 @@ export default function Admin() {
                 {projects?.map((p) => (
                   <div key={p.id} className="flex items-center justify-between gap-3 bg-card/40 rounded-md border border-border/30 p-4" data-testid={`admin-project-${p.id}`}>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{p.title}</p>
-                      <p className="text-sm text-muted-foreground truncate">{p.description.slice(0, 80)}...</p>
+                      <p className="font-medium truncate">{p.title?.pt ?? ""}</p>
+                      <p className="text-xs text-muted-foreground truncate">{p.title?.en ?? ""}</p>
+                      <p className="text-sm text-muted-foreground truncate mt-0.5">{p.description?.pt?.slice(0, 80)}...</p>
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
                       {p.featured && <Badge variant="default" className="text-xs">Featured</Badge>}
                       <Button size="icon" variant="ghost" onClick={() => setEditingProject({
-                        id: p.id, title: p.title, slug: p.slug, description: p.description,
-                        content: p.content, imageUrl: p.imageUrl || "", githubUrl: p.githubUrl || "",
-                        liveUrl: p.liveUrl || "", techStack: p.techStack.join(", "), featured: p.featured,
+                        id: p.id,
+                        titlePt: p.title?.pt ?? "",
+                        titleEn: p.title?.en ?? "",
+                        slug: p.slug,
+                        descriptionPt: p.description?.pt ?? "",
+                        descriptionEn: p.description?.en ?? "",
+                        contentPt: p.content?.pt ?? "",
+                        contentEn: p.content?.en ?? "",
+                        imageUrl: p.imageUrl ?? "",
+                        githubUrl: p.githubUrl ?? "",
+                        liveUrl: p.liveUrl ?? "",
+                        techStack: p.techStack.join(", "),
+                        featured: p.featured,
                       })} data-testid={`button-edit-project-${p.id}`}><Pencil className="h-4 w-4" /></Button>
                       <Button size="icon" variant="ghost" onClick={() => deleteProject.mutate(p.id)} data-testid={`button-delete-project-${p.id}`}><Trash2 className="h-4 w-4" /></Button>
                     </div>
@@ -391,23 +540,71 @@ export default function Admin() {
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               <div className="flex items-center justify-between gap-2 mb-6">
                 <h1 className="text-2xl font-serif font-bold">{t("admin.experiences")}</h1>
-                <Button onClick={() => setEditingExperience({ company: "", role: "", startDate: "", endDate: "", description: "", achievements: "" })} data-testid="button-add-experience">
+                <Button
+                  onClick={() => setEditingExperience({
+                    company: "", rolePt: "", roleEn: "", startDate: "", endDate: "",
+                    descriptionPt: "", descriptionEn: "", achievementsPt: "", achievementsEn: "",
+                  })}
+                  data-testid="button-add-experience"
+                >
                   <Plus className="mr-2 h-4 w-4" /> {t("admin.add")}
                 </Button>
               </div>
 
               {editingExperience && (
                 <div className="bg-card/40 rounded-md border border-border/30 p-6 mb-6 space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div><Label>Company</Label><Input value={editingExperience.company} onChange={(e) => setEditingExperience({ ...editingExperience, company: e.target.value })} data-testid="input-experience-company" /></div>
-                    <div><Label>Role</Label><Input value={editingExperience.role} onChange={(e) => setEditingExperience({ ...editingExperience, role: e.target.value })} data-testid="input-experience-role" /></div>
+                  {/* Empresa + Datas */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                      <Label>Company</Label>
+                      <Input value={editingExperience.company} onChange={(e) => setEditingExperience({ ...editingExperience, company: e.target.value })} data-testid="input-experience-company" />
+                    </div>
+                    <div>
+                      <Label>Start Date</Label>
+                      <Input value={editingExperience.startDate} onChange={(e) => setEditingExperience({ ...editingExperience, startDate: e.target.value })} placeholder="Jan 2023" data-testid="input-experience-start" />
+                    </div>
+                    <div>
+                      <Label>End Date (empty = present)</Label>
+                      <Input value={editingExperience.endDate} onChange={(e) => setEditingExperience({ ...editingExperience, endDate: e.target.value })} placeholder="Dec 2024" data-testid="input-experience-end" />
+                    </div>
                   </div>
+
+                  {/* Cargo (bilíngue) */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div><Label>Start Date</Label><Input value={editingExperience.startDate} onChange={(e) => setEditingExperience({ ...editingExperience, startDate: e.target.value })} placeholder="Jan 2023" data-testid="input-experience-start" /></div>
-                    <div><Label>End Date (empty = present)</Label><Input value={editingExperience.endDate} onChange={(e) => setEditingExperience({ ...editingExperience, endDate: e.target.value })} placeholder="Dec 2024" data-testid="input-experience-end" /></div>
+                    <div>
+                      <Label>Cargo (PT) 🇧🇷</Label>
+                      <Input value={editingExperience.rolePt} onChange={(e) => setEditingExperience({ ...editingExperience, rolePt: e.target.value })} placeholder="Desenvolvedora Fullstack" data-testid="input-experience-role-pt" />
+                    </div>
+                    <div>
+                      <Label>Role (EN) 🇬🇧</Label>
+                      <Input value={editingExperience.roleEn} onChange={(e) => setEditingExperience({ ...editingExperience, roleEn: e.target.value })} placeholder="Fullstack Developer" data-testid="input-experience-role-en" />
+                    </div>
                   </div>
-                  <div><Label>Description</Label><Textarea value={editingExperience.description} onChange={(e) => setEditingExperience({ ...editingExperience, description: e.target.value })} data-testid="input-experience-description" /></div>
-                  <div><Label>Achievements (one per line)</Label><Textarea className="min-h-[100px]" value={editingExperience.achievements} onChange={(e) => setEditingExperience({ ...editingExperience, achievements: e.target.value })} data-testid="input-experience-achievements" /></div>
+
+                  {/* Descrição (bilíngue) */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <Label>Descrição (PT) 🇧🇷</Label>
+                      <Textarea value={editingExperience.descriptionPt} onChange={(e) => setEditingExperience({ ...editingExperience, descriptionPt: e.target.value })} data-testid="input-experience-desc-pt" />
+                    </div>
+                    <div>
+                      <Label>Description (EN) 🇬🇧</Label>
+                      <Textarea value={editingExperience.descriptionEn} onChange={(e) => setEditingExperience({ ...editingExperience, descriptionEn: e.target.value })} data-testid="input-experience-desc-en" />
+                    </div>
+                  </div>
+
+                  {/* Conquistas (bilíngue) */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <Label>Conquistas (PT) 🇧🇷 — uma por linha</Label>
+                      <Textarea className="min-h-[100px]" value={editingExperience.achievementsPt} onChange={(e) => setEditingExperience({ ...editingExperience, achievementsPt: e.target.value })} data-testid="input-experience-ach-pt" />
+                    </div>
+                    <div>
+                      <Label>Achievements (EN) 🇬🇧 — one per line</Label>
+                      <Textarea className="min-h-[100px]" value={editingExperience.achievementsEn} onChange={(e) => setEditingExperience({ ...editingExperience, achievementsEn: e.target.value })} data-testid="input-experience-ach-en" />
+                    </div>
+                  </div>
+
                   <div className="flex gap-2">
                     <Button onClick={() => saveExperience.mutate(editingExperience)} disabled={saveExperience.isPending} data-testid="button-save-experience">
                       {saveExperience.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}{t("admin.save")}
@@ -421,13 +618,22 @@ export default function Admin() {
                 {experiences?.map((e) => (
                   <div key={e.id} className="flex items-center justify-between gap-3 bg-card/40 rounded-md border border-border/30 p-4" data-testid={`admin-experience-${e.id}`}>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium">{e.role}</p>
-                      <p className="text-sm text-muted-foreground">{e.company} | {e.startDate} - {e.endDate || "Present"}</p>
+                      <p className="font-medium">{e.role?.pt ?? ""}</p>
+                      <p className="text-xs text-muted-foreground">{e.role?.en ?? ""}</p>
+                      <p className="text-sm text-muted-foreground mt-0.5">{e.company} | {e.startDate} — {e.endDate || "Present"}</p>
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
                       <Button size="icon" variant="ghost" onClick={() => setEditingExperience({
-                        id: e.id, company: e.company, role: e.role, startDate: e.startDate,
-                        endDate: e.endDate || "", description: e.description, achievements: (e.achievements || []).join("\n"),
+                        id: e.id,
+                        company: e.company,
+                        rolePt: e.role?.pt ?? "",
+                        roleEn: e.role?.en ?? "",
+                        startDate: e.startDate,
+                        endDate: e.endDate ?? "",
+                        descriptionPt: e.description?.pt ?? "",
+                        descriptionEn: e.description?.en ?? "",
+                        achievementsPt: e.achievements?.pt ?? "",
+                        achievementsEn: e.achievements?.en ?? "",
                       })} data-testid={`button-edit-experience-${e.id}`}><Pencil className="h-4 w-4" /></Button>
                       <Button size="icon" variant="ghost" onClick={() => deleteExperience.mutate(e.id)} data-testid={`button-delete-experience-${e.id}`}><Trash2 className="h-4 w-4" /></Button>
                     </div>

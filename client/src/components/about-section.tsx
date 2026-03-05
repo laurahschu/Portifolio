@@ -6,7 +6,7 @@ import { Briefcase, Calendar } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export function AboutSection() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
 
   const { data: experiences, isLoading } = useQuery<Experience[]>({
     queryKey: ["/api/experiences"],
@@ -69,22 +69,26 @@ export function AboutSection() {
 
                     <div className="bg-card/50 rounded-md p-5 border border-border/30">
                       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 mb-2">
-                        <h4 className="font-semibold text-lg">{exp.role}</h4>
+                        <h4 className="font-semibold text-lg">{exp.role?.[lang] ?? exp.role?.pt ?? ""}</h4>
                         <span className="flex items-center gap-1 text-xs font-mono text-muted-foreground">
                           <Calendar className="h-3 w-3" />
                           {exp.startDate} — {exp.endDate || t("experience.present")}
                         </span>
                       </div>
                       <p className="text-sm text-primary font-medium mb-3">{exp.company}</p>
-                      <p className="text-sm text-muted-foreground mb-3">{exp.description}</p>
-                      {exp.achievements && exp.achievements.length > 0 && (
+                      <p className="text-sm text-muted-foreground mb-3">{exp.description?.[lang] ?? exp.description?.pt ?? ""}</p>
+                      {exp.achievements?.pt && exp.achievements?.en && (
                         <ul className="space-y-1">
-                          {exp.achievements.map((achievement, i) => (
-                            <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
-                              <span className="text-accent-foreground mt-1.5 h-1.5 w-1.5 rounded-full bg-accent shrink-0" />
-                              {achievement}
-                            </li>
-                          ))}
+                          {(exp.achievements[lang] ?? exp.achievements.pt)
+                            .split("\n")
+                            .map((line: string) => line.trim())
+                            .filter(Boolean)
+                            .map((achievement: string, i: number) => (
+                              <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
+                                <span className="text-accent-foreground mt-1.5 h-1.5 w-1.5 rounded-full bg-accent shrink-0" />
+                                {achievement}
+                              </li>
+                            ))}
                         </ul>
                       )}
                     </div>

@@ -19,7 +19,7 @@ const translations: Record<Language, Record<string, string>> = {
     "hero.greeting": "Olá, eu sou",
     "hero.name": "Laura Hahn Schu",
     "hero.role": "Fullstack Developer | Cientista da Computação",
-    "hero.bio": "Desenvolvedora Fullstack proativa e Cientista da Computação movida por desafios, focada em elevar a qualidade de entregas e resolver gargalos operacionais. Possuo sólida experiência implementando pipelines CI/CD, APIs escaláveis e interfaces responsivas.",
+    "hero.bio": "Desenvolvedora Fullstack e Cientista da Computação, movida por desafios, focada em elevar a qualidade de entregas e resolver gargalos operacionais. Possuo sólida experiência implementando pipelines CI/CD, APIs escaláveis e interfaces responsivas.",
     "hero.cta": "Ver Projetos",
     "hero.contact": "Fale Comigo",
     "about.title": "Sobre Mim",

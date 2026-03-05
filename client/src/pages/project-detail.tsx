@@ -13,7 +13,7 @@ import { useI18n } from "@/lib/i18n";
 
 export default function ProjectDetail() {
   const { slug } = useParams<{ slug: string }>();
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
 
   const { data: project, isLoading } = useQuery<Project>({
     queryKey: ["/api/projects", slug],
@@ -61,12 +61,12 @@ export default function ProjectDetail() {
               {project.imageUrl ? (
                 <img
                   src={project.imageUrl}
-                  alt={project.title}
+                  alt={project.title?.[lang] ?? project.title?.pt ?? ""}
                   className="w-full h-full object-cover rounded-md"
                 />
               ) : (
                 <div className="text-6xl font-serif font-bold text-primary/20">
-                  {project.title.charAt(0)}
+                  {(project.title?.[lang] ?? project.title?.pt ?? "").charAt(0)}
                 </div>
               )}
             </div>
@@ -74,7 +74,7 @@ export default function ProjectDetail() {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
               <div>
                 <h1 className="text-3xl sm:text-4xl font-serif font-bold mb-2" data-testid="text-project-title">
-                  {project.title}
+                  {project.title?.[lang] ?? project.title?.pt ?? ""}
                 </h1>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Calendar className="h-4 w-4" />
@@ -112,12 +112,12 @@ export default function ProjectDetail() {
 
             <div className="bg-card/40 rounded-md border border-border/30 p-6 sm:p-8 mb-8">
               <p className="text-muted-foreground leading-relaxed mb-6" data-testid="text-project-description">
-                {project.description}
+                {project.description?.[lang] ?? project.description?.pt ?? ""}
               </p>
             </div>
 
             <div className="prose prose-neutral dark:prose-invert max-w-none" data-testid="text-project-content">
-              {project.content.split("\n").map((paragraph, i) => (
+              {(project.content?.[lang] ?? project.content?.pt ?? "").split("\n").map((paragraph, i) => (
                 <p key={i} className="text-muted-foreground leading-relaxed">
                   {paragraph}
                 </p>
