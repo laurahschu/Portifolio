@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Switch, Route, useLocation } from "wouter";
 import { queryClient, getAdminToken } from "./lib/queryClient";
 import { QueryClientProvider, useQuery } from "@tanstack/react-query";
@@ -38,6 +38,15 @@ function ProtectedRoute() {
     retry: 1,
   });
 
+  const shouldRedirect = !isLoading && (isError || !data?.authenticated);
+
+  // useEffect avoids calling navigate() during render, which wouter may silently drop
+  useEffect(() => {
+    if (shouldRedirect) {
+      navigate("/admin/login");
+    }
+  }, [shouldRedirect, navigate]);
+
   // Still waiting for the auth check
   if (isLoading) {
     return (
@@ -47,11 +56,8 @@ function ProtectedRoute() {
     );
   }
 
-  // No token, expired token, or server rejected it → send to login
-  if (isError || !data?.authenticated) {
-    navigate("/admin/login");
-    return null;
-  }
+  // No token, expired token, or server rejected it → render nothing while redirecting
+  if (shouldRedirect) return null;
 
   return <Admin />;
 }

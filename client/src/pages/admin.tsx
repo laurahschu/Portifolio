@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
@@ -7,7 +7,7 @@ import { useI18n } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  LogOut, Loader2, LayoutDashboard, FolderOpen, Code2, Briefcase, MessageSquare, User,
+  LogOut, LayoutDashboard, FolderOpen, Code2, Briefcase, MessageSquare, User,
   type LucideIcon,
 } from "lucide-react";
 import type { Message } from "@shared/schema";
@@ -26,24 +26,9 @@ export default function Admin() {
   const [, setLocation] = useLocation();
   const { t } = useI18n();
 
-
-  const { data: authCheck, isLoading: authLoading } = useQuery<{ authenticated: boolean }>({
-    queryKey: ["/api/admin/check"],
-    queryFn: async () => {
-      const res = await fetch("/api/admin/check", { credentials: "include" });
-      return res.json();
-    },
-  });
-
   // Necessário para o badge de não lidos no menu
   const { data: messages } = useQuery<Message[]>({ queryKey: ["/api/admin/messages"] });
   const unreadCount = messages?.filter((m) => !m.read).length || 0;
-
-  useEffect(() => {
-    if (!authLoading && !authCheck?.authenticated) {
-      setLocation("/admin/login");
-    }
-  }, [authCheck, authLoading, setLocation]);
 
   const logout = async () => {
     await apiRequest("POST", "/api/admin/logout", {});
@@ -62,15 +47,6 @@ export default function Admin() {
       label: `${t("admin.messages")}${unreadCount > 0 ? ` (${unreadCount})` : ""}`,
     },
   ];
-
-  if (authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-  if (!authCheck?.authenticated) return null;
 
   const tabContent: Record<AdminTab, React.ReactNode> = {
     overview:    <OverviewTab />,

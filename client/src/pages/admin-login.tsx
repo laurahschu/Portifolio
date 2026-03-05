@@ -32,11 +32,11 @@ export default function AdminLogin() {
       localStorage.setItem("admin_token", data.token);
       setAdminToken(data.token);
 
-      // 2. Invalidate the auth-check cache so ProtectedRoute re-fetches
-      //    with the new token and grants access immediately
-      await queryClient.invalidateQueries({ queryKey: ["/api/admin/check"] });
+      // 2. Refresh the auth-check cache so ProtectedRoute sees the new token
+      //    immediately — refetchQueries awaits the network call, unlike invalidate.
+      await queryClient.refetchQueries({ queryKey: ["/api/admin/check"] });
 
-      // 3. Navigate to the protected panel
+      // 3. Navigate to the protected panel (token is already in localStorage)
       setLocation("/admin");
     } catch (err: any) {
       toast({
