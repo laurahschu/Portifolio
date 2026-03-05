@@ -118,17 +118,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async upsertProfile(data: InsertProfile): Promise<Profile> {
-    // Tenta atualizar o registro singleton (id=1); se não existir, insere.
-    const existing = await db.select().from(profile).limit(1);
-    if (existing.length > 0) {
-      const result = await db
-        .update(profile)
-        .set(data)
-        .where(eq(profile.id, existing[0].id))
-        .returning();
-      return result[0];
-    }
-    const result = await db.insert(profile).values(data).returning();
+    // INSERT com ON CONFLICT garante atomicidade — sem race condition entre SELECT e UPDATE.
+    const result = await db
+      .insert(profile)
+      .values({ id: 1, ...data })
+      .onConflictDoUpdate({ target: profile.id, set: data })
+      .returning();
     return result[0];
   }
 }

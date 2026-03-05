@@ -14,7 +14,6 @@ export async function registerRoutes(
   app: Express
 ): Promise<Server> {
 
-
   app.get("/api/projects", async (_req: Request, res: Response) => {
     const projects = await storage.getProjects();
     res.json(projects);
@@ -52,7 +51,6 @@ export async function registerRoutes(
     return res.json({ success: true, token });
   });
 
-
   app.post("/api/admin/logout", (_req: Request, res: Response) => {
     res.json({ success: true });
   });
@@ -87,7 +85,6 @@ export async function registerRoutes(
   app.post("/api/admin/projects", requireAdmin, async (req: Request, res: Response) => {
     const parsed = insertProjectSchema.safeParse(req.body);
     if (!parsed.success) {
-      console.error("[POST /api/admin/projects] Validation error:", parsed.error.flatten());
       return res.status(400).json({ message: "Invalid data", errors: parsed.error.flatten() });
     }
     const project = await storage.createProject(parsed.data);
@@ -97,7 +94,6 @@ export async function registerRoutes(
   app.patch("/api/admin/projects/:id", requireAdmin, async (req: Request, res: Response) => {
     const parsed = insertProjectSchema.partial().safeParse(req.body);
     if (!parsed.success) {
-      console.error("[PATCH /api/admin/projects] Validation error:", parsed.error.flatten());
       return res.status(400).json({ message: "Invalid data", errors: parsed.error.flatten() });
     }
     const project = await storage.updateProject(toId(req.params.id), parsed.data);
@@ -117,7 +113,11 @@ export async function registerRoutes(
   });
 
   app.patch("/api/admin/skills/:id", requireAdmin, async (req: Request, res: Response) => {
-    const skill = await storage.updateSkill(toId(req.params.id), req.body);
+    const parsed = insertSkillSchema.partial().safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ message: "Invalid data", errors: parsed.error.flatten() });
+    }
+    const skill = await storage.updateSkill(toId(req.params.id), parsed.data);
     res.json(skill);
   });
 
@@ -134,7 +134,11 @@ export async function registerRoutes(
   });
 
   app.patch("/api/admin/experiences/:id", requireAdmin, async (req: Request, res: Response) => {
-    const experience = await storage.updateExperience(toId(req.params.id), req.body);
+    const parsed = insertExperienceSchema.partial().safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ message: "Invalid data", errors: parsed.error.flatten() });
+    }
+    const experience = await storage.updateExperience(toId(req.params.id), parsed.data);
     res.json(experience);
   });
 
