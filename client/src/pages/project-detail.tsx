@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useParams, Link } from "wouter";
 import { motion } from "framer-motion";
@@ -8,16 +9,24 @@ import { CommandPalette } from "@/components/command-palette";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Github, ExternalLink, Star, Calendar } from "lucide-react";
+import { ArrowLeft, Github, ExternalLink, Star, Calendar, ChevronLeft, ChevronRight } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 
 export default function ProjectDetail() {
   const { slug } = useParams<{ slug: string }>();
   const { t, lang } = useI18n();
+  const [imgIdx, setImgIdx] = useState(0);
 
   const { data: project, isLoading } = useQuery<Project>({
     queryKey: ["/api/projects", slug],
   });
+
+  const images = project?.imageUrls ?? [];
+  const hasImages = images.length > 0;
+  const hasMultiple = images.length > 1;
+
+  const prevImg = () => setImgIdx((i) => (i - 1 + images.length) % images.length);
+  const nextImg = () => setImgIdx((i) => (i + 1) % images.length);
 
   return (
     <div className="min-h-screen bg-background">
@@ -49,21 +58,53 @@ export default function ProjectDetail() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <div className="relative h-64 sm:h-80 bg-gradient-to-br from-primary/10 via-accent/5 to-background rounded-md mb-8 flex items-center justify-center">
+            <div className="relative h-64 sm:h-80 bg-gradient-to-br from-primary/10 via-accent/5 to-background rounded-md mb-8 flex items-center justify-center overflow-hidden">
               {project.featured && (
-                <div className="absolute top-4 left-4">
+                <div className="absolute top-4 left-4 z-10">
                   <Badge variant="default" className="gap-1">
                     <Star className="h-3 w-3" />
                     {t("projects.featured")}
                   </Badge>
                 </div>
               )}
-              {project.imageUrl ? (
-                <img
-                  src={project.imageUrl}
-                  alt={project.title?.[lang] ?? project.title?.pt ?? ""}
-                  className="w-full h-full object-cover rounded-md"
-                />
+              {hasImages ? (
+                <>
+                  <img
+                    src={images[imgIdx]}
+                    alt={`${project.title?.[lang] ?? project.title?.pt ?? ""} - ${imgIdx + 1}`}
+                    className="w-full h-full object-cover rounded-md transition-opacity duration-300"
+                  />
+                  {hasMultiple && (
+                    <>
+                      <button
+                        onClick={prevImg}
+                        className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-black/40 hover:bg-black/60 text-white rounded-full p-1.5 transition-colors"
+                        aria-label="Previous image"
+                      >
+                        <ChevronLeft className="h-5 w-5" />
+                      </button>
+                      <button
+                        onClick={nextImg}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-black/40 hover:bg-black/60 text-white rounded-full p-1.5 transition-colors"
+                        aria-label="Next image"
+                      >
+                        <ChevronRight className="h-5 w-5" />
+                      </button>
+                      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 flex gap-1.5">
+                        {images.map((_, i) => (
+                          <button
+                            key={i}
+                            onClick={() => setImgIdx(i)}
+                            className={`w-2 h-2 rounded-full transition-colors ${
+                              i === imgIdx ? "bg-white" : "bg-white/40"
+                            }`}
+                            aria-label={`Go to image ${i + 1}`}
+                          />
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </>
               ) : (
                 <div className="text-6xl font-serif font-bold text-primary/20">
                   {(project.title?.[lang] ?? project.title?.pt ?? "").charAt(0)}

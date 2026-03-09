@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Pencil, Trash2, Loader2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, ImagePlus, X } from "lucide-react";
 import type { Project } from "@shared/schema";
 import type { EditingProject } from "@/types/admin";
 import { EMPTY_PROJECT } from "@/types/admin";
@@ -29,7 +29,7 @@ export function ProjectsTab() {
         description: { pt: data.descriptionPt, en: data.descriptionEn },
         content: { pt: data.contentPt, en: data.contentEn },
         techStack: data.techStack.split(",").map((s) => s.trim()).filter(Boolean),
-        imageUrl: data.imageUrl || null,
+        imageUrls: data.imageUrls.filter((u) => u.trim() !== ""),
         githubUrl: data.githubUrl || null,
         liveUrl: data.liveUrl || null,
         featured: data.featured,
@@ -66,7 +66,7 @@ export function ProjectsTab() {
       descriptionEn: p.description?.en ?? "",
       contentPt: p.content?.pt ?? "",
       contentEn: p.content?.en ?? "",
-      imageUrl: p.imageUrl ?? "",
+      imageUrls: p.imageUrls ?? [],
       githubUrl: p.githubUrl ?? "",
       liveUrl: p.liveUrl ?? "",
       techStack: p.techStack.join(", "),
@@ -130,9 +130,49 @@ export function ProjectsTab() {
             </div>
           </div>
 
+          {/* Image URLs (dynamic list) */}
+          <div className="space-y-2">
+            <Label>Image URLs</Label>
+            {editing.imageUrls.map((url, idx) => (
+              <div key={idx} className="flex items-center gap-2">
+                <Input
+                  placeholder={`Image URL ${idx + 1}`}
+                  value={url}
+                  onChange={(e) => {
+                    const next = [...editing.imageUrls];
+                    next[idx] = e.target.value;
+                    update({ imageUrls: next });
+                  }}
+                  data-testid={`input-project-image-${idx}`}
+                />
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => {
+                    const next = editing.imageUrls.filter((_, i) => i !== idx);
+                    update({ imageUrls: next });
+                  }}
+                  data-testid={`button-remove-image-${idx}`}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => update({ imageUrls: [...editing.imageUrls, ""] })}
+              data-testid="button-add-image"
+            >
+              <ImagePlus className="mr-2 h-4 w-4" />
+              Add Image
+            </Button>
+          </div>
+
           {/* URLs */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div><Label>Image URL</Label><Input value={editing.imageUrl} onChange={(e) => update({ imageUrl: e.target.value })} /></div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div><Label>GitHub URL</Label><Input value={editing.githubUrl} onChange={(e) => update({ githubUrl: e.target.value })} /></div>
             <div><Label>Live URL</Label><Input value={editing.liveUrl} onChange={(e) => update({ liveUrl: e.target.value })} /></div>
           </div>

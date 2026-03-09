@@ -101,9 +101,9 @@ export function ProjectsSection() {
                         </Badge>
                       </div>
                     )}
-                    {project.imageUrl ? (
+                    {project.imageUrls?.[0] ? (
                       <img
-                        src={project.imageUrl}
+                        src={project.imageUrls[0]}
                         alt={project.title?.[lang] ?? project.title?.pt ?? ""}
                         className="w-full h-full object-cover rounded-t-md"
                       />

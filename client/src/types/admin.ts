@@ -16,7 +16,7 @@ export interface EditingProject {
   descriptionEn: string;
   contentPt: string;
   contentEn: string;
-  imageUrl: string;
+  imageUrls: string[];
   githubUrl: string;
   liveUrl: string;
   techStack: string;
@@ -49,7 +49,7 @@ export const EMPTY_PROJECT: EditingProject = {
   titlePt: "", titleEn: "", slug: "",
   descriptionPt: "", descriptionEn: "",
   contentPt: "", contentEn: "",
-  imageUrl: "", githubUrl: "", liveUrl: "",
+  imageUrls: [], githubUrl: "", liveUrl: "",
   techStack: "", featured: false,
 };
 
