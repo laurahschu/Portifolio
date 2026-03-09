@@ -1,6 +1,6 @@
-import { db } from "./db";
-import { projects, skills, experiences, profile } from "../shared/schema";
-import { log } from "./index";
+import { db } from "./db.js";
+import { projects, skills, experiences, profile } from "../shared/schema.js";
+import { log } from "./index.js";
 
 export async function seedDatabase() {
   const existingProjects = await db.select().from(projects).limit(1);

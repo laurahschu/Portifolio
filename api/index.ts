@@ -5,7 +5,7 @@
  * (req, res). Aqui reutilizamos o app Express existente sem alterá-lo.
  */
 import express, { type Request, Response, NextFunction } from "express";
-import { registerRoutes } from "../server/routes";
+import { registerRoutes } from "../server/routes.js";
 
 const app = express();
 
@@ -23,7 +23,7 @@ const server = await (async () => {
   const { createServer } = await import("http");
   const httpServer = createServer(app);
 
-  const { seedDatabase } = await import("../server/seed");
+  const { seedDatabase } = await import("../server/seed.js");
   await seedDatabase().catch((e) => console.error("Seed error:", e));
 
   await registerRoutes(httpServer, app);

@@ -1,4 +1,4 @@
-import { db } from "./db";
+import { db } from "./db.js";
 import { eq } from "drizzle-orm";
 import {
   projects, skills, experiences, messages, profile,
@@ -7,7 +7,7 @@ import {
   type Experience, type InsertExperience,
   type Message, type InsertMessage,
   type Profile, type InsertProfile,
-} from "../shared/schema";
+} from "../shared/schema.js";
 
 export interface IStorage {
   getProjects(): Promise<Project[]>;
