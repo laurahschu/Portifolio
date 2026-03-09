@@ -5,3 +5,5 @@ server/public
 vite.config.ts.*
 .env
 *.tar.gz
+portfolio-backup.zip
+postgres_data/
