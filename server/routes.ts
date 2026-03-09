@@ -1,7 +1,7 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertMessageSchema, insertProjectSchema, insertSkillSchema, insertExperienceSchema, insertProfileSchema } from "@shared/schema";
+import { insertMessageSchema, insertProjectSchema, insertSkillSchema, insertExperienceSchema, insertProfileSchema } from "../shared/schema";
 import { signToken, verifyToken, requireAdmin } from "./auth";
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin123";

@@ -7,7 +7,7 @@ import {
   type Experience, type InsertExperience,
   type Message, type InsertMessage,
   type Profile, type InsertProfile,
-} from "@shared/schema";
+} from "../shared/schema";
 
 export interface IStorage {
   getProjects(): Promise<Project[]>;

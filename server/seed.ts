@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { projects, skills, experiences, profile } from "@shared/schema";
+import { projects, skills, experiences, profile } from "../shared/schema";
 import { log } from "./index";
 
 export async function seedDatabase() {
