@@ -15,6 +15,9 @@ export function ProfileTab() {
 
   const [bioPt, setBioPt] = useState("");
   const [bioEn, setBioEn] = useState("");
+  
+  const [aboutMePt, setAboutMePt] = useState("");
+  const [aboutMeEn, setAboutMeEn] = useState("");
 
   const { data: profileData } = useQuery<ProfileData>({
     queryKey: ["/api/profile"],
@@ -22,9 +25,15 @@ export function ProfileTab() {
 
   // Preenche os campos apenas quando os dados chegam do banco pela primeira vez
   useEffect(() => {
-    if (profileData?.bio) {
-      setBioPt(profileData.bio.pt ?? "");
-      setBioEn(profileData.bio.en ?? "");
+    if (profileData) {
+      if (profileData.bio) {
+        setBioPt(profileData.bio.pt ?? "");
+        setBioEn(profileData.bio.en ?? "");
+      }
+      if (profileData.aboutMe) {
+        setAboutMePt(profileData.aboutMe.pt ?? "");
+        setAboutMeEn(profileData.aboutMe.en ?? "");
+      }
     }
   }, [profileData]);
 
@@ -32,6 +41,7 @@ export function ProfileTab() {
     mutationFn: () =>
       apiRequest("PATCH", "/api/admin/profile", {
         bio: { pt: bioPt, en: bioEn },
+        aboutMe: { pt: aboutMePt, en: aboutMeEn },
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/profile"] });
@@ -71,6 +81,33 @@ export function ProfileTab() {
               onChange={(e) => setBioEn(e.target.value)}
               placeholder="English text..."
               data-testid="input-profile-bio-en"
+            />
+          </div>
+        </div>
+
+        <p className="text-sm text-muted-foreground pt-4 border-t border-border/30">
+          O texto abaixo aparece na seção Sobre Mim (About Me).
+        </p>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <Label>Texto da seção Sobre (PT) 🇧🇷</Label>
+            <Textarea
+              className="min-h-[180px] mt-1.5"
+              value={aboutMePt}
+              onChange={(e) => setAboutMePt(e.target.value)}
+              placeholder="Texto em Português..."
+              data-testid="input-profile-aboutme-pt"
+            />
+          </div>
+          <div>
+            <Label>Texto da seção About (EN) 🇬🇧</Label>
+            <Textarea
+              className="min-h-[180px] mt-1.5"
+              value={aboutMeEn}
+              onChange={(e) => setAboutMeEn(e.target.value)}
+              placeholder="English text..."
+              data-testid="input-profile-aboutme-en"
             />
           </div>
         </div>

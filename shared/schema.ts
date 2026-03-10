@@ -65,6 +65,7 @@ export const messages = pgTable("messages", {
 export const profile = pgTable("profile", {
   id: serial("id").primaryKey(),
   bio: jsonb("bio").notNull().$type<LocalizedText>(),
+  aboutMe: jsonb("about_me").notNull().$type<LocalizedText>().default({ pt: "", en: "" }),
 });
 
 // ---------------------------------------------------------------------------
@@ -96,6 +97,7 @@ export const insertExperienceSchema = z.object({
 
 export const insertProfileSchema = z.object({
   bio: localizedText,
+  aboutMe: localizedText,
 });
 
 export const insertMessageSchema = createInsertSchema(messages).omit({ id: true, read: true, createdAt: true });

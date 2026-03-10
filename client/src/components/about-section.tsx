@@ -8,9 +8,15 @@ import { Skeleton } from "@/components/ui/skeleton";
 export function AboutSection() {
   const { t, lang } = useI18n();
 
-  const { data: experiences, isLoading } = useQuery<Experience[]>({
+  const { data: experiences, isLoading: experiencesLoading } = useQuery<Experience[]>({
     queryKey: ["/api/experiences"],
   });
+
+  const { data: profileData, isLoading: profileLoading } = useQuery<{ aboutMe: { pt: string; en: string } }>({
+    queryKey: ["/api/profile"],
+  });
+
+  const aboutDescription = profileData?.aboutMe?.[lang] ?? profileData?.aboutMe?.pt ?? t("about.description");
 
   return (
     <section id="about" className="py-24 relative">
@@ -25,9 +31,17 @@ export function AboutSection() {
           <h2 className="text-3xl sm:text-4xl font-serif font-bold mb-4" data-testid="text-about-title">
             {t("about.title")}
           </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto" data-testid="text-about-description">
-            {t("about.description")}
-          </p>
+          <div className="text-muted-foreground max-w-2xl mx-auto whitespace-pre-wrap text-left sm:text-center" data-testid="text-about-description">
+            {profileLoading ? (
+               <div className="flex flex-col gap-2 items-center">
+                 <Skeleton className="h-4 w-full" />
+                 <Skeleton className="h-4 w-5/6" />
+                 <Skeleton className="h-4 w-4/6" />
+               </div>
+            ) : (
+               aboutDescription
+            )}
+          </div>
         </motion.div>
 
         <motion.div
@@ -45,7 +59,7 @@ export function AboutSection() {
             <div className="absolute left-4 top-0 bottom-0 w-px bg-gradient-to-b from-primary/50 via-accent/30 to-transparent" />
 
             <div className="space-y-8">
-              {isLoading ? (
+              {experiencesLoading ? (
                 Array.from({ length: 3 }).map((_, i) => (
                   <div key={i} className="pl-10 relative">
                     <div className="absolute left-[11px] top-2 w-3 h-3 rounded-full bg-muted" />

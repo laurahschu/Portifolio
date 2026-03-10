@@ -5,6 +5,7 @@ export type AdminTab = "overview" | "projects" | "skills" | "experiences" | "mes
 export interface ProfileData {
   id: number;
   bio: { pt: string; en: string };
+  aboutMe: { pt: string; en: string };
 }
 
 export interface EditingProject {
