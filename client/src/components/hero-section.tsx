@@ -157,7 +157,7 @@ export function HeroSection() {
                 <Mail className="h-5 w-5" />
               </Button>
             </a>
-            <a href="https://w.app/swsd9u" target="_blank" rel="noopener noreferrer" data-testid="link-whatsapp">
+            <a href="https://wa.me/555499512291text=Olá!%20" target="_blank" rel="noopener noreferrer" data-testid="link-whatsapp">
               <Button size="icon" variant="ghost">
                 <MessageCircle className="h-5 w-5" />
               </Button>

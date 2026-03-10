@@ -167,7 +167,7 @@ export function ContactSection() {
               <Mail className="h-4 w-4 text-primary" />
               lauraschuwork@gmail.com
             </a>
-            <a href="https://w.app/swsd9u" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-muted-foreground transition-colors" data-testid="link-contact-whatsapp">
+            <a href="https://wa.me/555499512291text=Olá!%20" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-muted-foreground transition-colors" data-testid="link-contact-whatsapp">
               <MessageCircle className="h-4 w-4 text-primary" />
               WhatsApp
             </a>
