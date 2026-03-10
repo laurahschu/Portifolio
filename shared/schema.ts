@@ -15,6 +15,19 @@ const nullableUrl = z.preprocess(
   z.string().url().nullable().or(z.null())
 );
 
+/** Converte uma string para um formato URL-friendly (kebab-case). */
+export const slugify = (text: string) => {
+  return text
+    .toString()
+    .normalize('NFD') // separa acentos das letras
+    .replace(/[\u0300-\u036f]/g, '') // remove os acentos
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, '-') // substitui caracteres que não sejam letras, números, espaços ou traços por traço
+    .replace(/[\s-]+/g, '-') // substitui múltiplos espaços ou traços por um único
+    .replace(/^-+|-+$/g, ''); // remove traços no início e no fim
+};
+
 // ---------------------------------------------------------------------------
 // Tabelas
 // ---------------------------------------------------------------------------
@@ -81,7 +94,7 @@ export const clients = pgTable("clients", {
 
 export const insertProjectSchema = z.object({
   title: localizedText,
-  slug: z.string().min(1),
+  slug: z.preprocess((val) => (typeof val === "string" ? slugify(val) : val), z.string().min(1)),
   description: localizedText,
   content: localizedText,
   imageUrls: z.array(z.string().url()).optional().default([]),

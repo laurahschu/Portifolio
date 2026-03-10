@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Plus, Pencil, Trash2, Loader2, ImagePlus, X } from "lucide-react";
-import type { Project } from "@shared/schema";
+import { slugify, type Project } from "@shared/schema";
 import type { EditingProject } from "@/types/admin";
 import { EMPTY_PROJECT } from "@/types/admin";
 
@@ -103,7 +103,7 @@ export function ProjectsTab() {
           {/* Slug */}
           <div>
             <Label>Slug</Label>
-            <Input value={editing.slug} onChange={(e) => update({ slug: e.target.value })} data-testid="input-project-slug" />
+            <Input value={editing.slug} onChange={(e) => update({ slug: slugify(e.target.value) })} data-testid="input-project-slug" />
           </div>
 
           {/* Descrição (bilíngue) */}
