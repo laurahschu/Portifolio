@@ -77,7 +77,7 @@ export function HeroSection() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <p className="text-sm font-mono text-primary mb-4 tracking-widest uppercase" data-testid="text-greeting">
+            <p className="text-sm text-primary mb-4 tracking-widest uppercase" data-testid="text-greeting">
               {t("hero.greeting")}
             </p>
           </motion.div>
@@ -99,7 +99,7 @@ export function HeroSection() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="h-8 mb-6"
           >
-            <span className="text-lg sm:text-xl font-mono text-muted-foreground" data-testid="text-typed-role">
+            <span className="text-lg sm:text-xl text-muted-foreground" data-testid="text-typed-role">
               {typedText}
               <span className="animate-pulse text-primary">|</span>
             </span>

@@ -10,7 +10,7 @@ import { Home, User, Code2, FolderOpen, Mail, Sun, Moon } from "lucide-react";
 export function CommandPalette() {
   const [open, setOpen] = useState(false);
   const [, setLocation] = useLocation();
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const { setTheme, resolvedTheme } = useTheme();
 
   const { data: projects } = useQuery<Project[]>({
@@ -79,7 +79,7 @@ export function CommandPalette() {
                   data-testid={`cmd-project-${project.id}`}
                 >
                   <FolderOpen className="mr-2 h-4 w-4" />
-                  {project.title}
+                  {project.title?.[lang] ?? project.title?.pt ?? ""}
                 </CommandItem>
               ))}
             </CommandGroup>

@@ -84,7 +84,7 @@ export function Navbar() {
               >
                 <Globe className="h-4 w-4" />
               </Button>
-              <span className="text-xs font-mono font-semibold text-muted-foreground uppercase">
+              <span className="text-xs font-semibold text-muted-foreground uppercase">
                 {lang === "pt" ? "PT" : "EN"}
               </span>
 

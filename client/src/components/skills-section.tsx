@@ -98,7 +98,7 @@ export function SkillsSection() {
                       >
                         <div className="flex items-center justify-between gap-2 mb-1">
                           <span className="text-sm font-medium">{skill.name}</span>
-                          <span className="text-xs font-mono text-muted-foreground">{skill.proficiency}%</span>
+                          <span className="text-xs text-muted-foreground">{skill.proficiency}%</span>
                         </div>
                         <Progress value={skill.proficiency} className="h-1.5" />
                       </motion.div>
@@ -110,38 +110,7 @@ export function SkillsSection() {
           })}
         </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: 0.4 }}
-          className="mt-6 bg-card/40 rounded-md border border-border/30 p-6"
-        >
-          <div className="flex items-center gap-2 mb-5">
-            <Github className="h-5 w-5 text-primary" />
-            <h3 className="font-serif font-semibold text-lg" data-testid="text-github-stats">
-              {t("github.stats")}
-            </h3>
-          </div>
 
-          <div className="grid grid-cols-3 gap-4">
-            <div className="text-center p-4 bg-background/50 rounded-md">
-              <GitCommit className="h-5 w-5 text-accent-foreground mx-auto mb-2" />
-              <p className="text-2xl font-bold font-mono text-primary">20+</p>
-              <p className="text-xs text-muted-foreground">{t("github.repos")}</p>
-            </div>
-            <div className="text-center p-4 bg-background/50 rounded-md">
-              <Star className="h-5 w-5 text-accent-foreground mx-auto mb-2" />
-              <p className="text-2xl font-bold font-mono text-primary">50+</p>
-              <p className="text-xs text-muted-foreground">{t("github.stars")}</p>
-            </div>
-            <div className="text-center p-4 bg-background/50 rounded-md">
-              <Code2 className="h-5 w-5 text-accent-foreground mx-auto mb-2" />
-              <p className="text-2xl font-bold font-mono text-primary">500+</p>
-              <p className="text-xs text-muted-foreground">{t("github.contributions")}</p>
-            </div>
-          </div>
-        </motion.div>
       </div>
     </section>
   );

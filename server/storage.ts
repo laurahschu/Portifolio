@@ -6,7 +6,7 @@ import {
   type Skill, type InsertSkill,
   type Experience, type InsertExperience,
   type Message, type InsertMessage,
-  type Profile, type InsertProfile,
+  type Profile, type InsertProfile
 } from "../shared/schema.js";
 
 export interface IStorage {
@@ -25,6 +25,7 @@ export interface IStorage {
   createExperience(data: InsertExperience): Promise<Experience>;
   updateExperience(id: number, data: Partial<InsertExperience>): Promise<Experience | undefined>;
   deleteExperience(id: number): Promise<void>;
+  reorderExperiences(items: { id: number; order: number }[]): Promise<void>;
 
   getMessages(): Promise<Message[]>;
   createMessage(data: InsertMessage): Promise<Message>;
@@ -78,7 +79,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getExperiences(): Promise<Experience[]> {
-    return db.select().from(experiences).orderBy(experiences.startDate);
+    return db.select().from(experiences).orderBy(experiences.order, experiences.startDate);
   }
 
   async createExperience(data: InsertExperience): Promise<Experience> {
@@ -93,6 +94,14 @@ export class DatabaseStorage implements IStorage {
 
   async deleteExperience(id: number): Promise<void> {
     await db.delete(experiences).where(eq(experiences.id, id));
+  }
+
+  async reorderExperiences(items: { id: number; order: number }[]): Promise<void> {
+    await db.transaction(async (tx) => {
+      for (const item of items) {
+        await tx.update(experiences).set({ order: item.order }).where(eq(experiences.id, item.id));
+      }
+    });
   }
 
   async getMessages(): Promise<Message[]> {
@@ -118,7 +127,6 @@ export class DatabaseStorage implements IStorage {
   }
 
   async upsertProfile(data: InsertProfile): Promise<Profile> {
-    // INSERT com ON CONFLICT garante atomicidade — sem race condition entre SELECT e UPDATE.
     const result = await db
       .insert(profile)
       .values({ id: 1, ...data })

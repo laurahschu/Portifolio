@@ -84,7 +84,7 @@ export function AboutSection() {
                     <div className="bg-card/50 rounded-md p-5 border border-border/30">
                       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 mb-2">
                         <h4 className="font-semibold text-lg">{exp.role?.[lang] ?? exp.role?.pt ?? ""}</h4>
-                        <span className="flex items-center gap-1 text-xs font-mono text-muted-foreground">
+                        <span className="flex items-center gap-1 text-xs text-muted-foreground">
                           <Calendar className="h-3 w-3" />
                           {exp.startDate} — {exp.endDate || t("experience.present")}
                         </span>

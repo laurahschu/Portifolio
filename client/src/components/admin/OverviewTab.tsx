@@ -16,7 +16,7 @@ function StatCard({ label, value, icon: Icon, accent }: StatCardProps) {
       <div className="flex items-center justify-between gap-2 mb-3">
         <Icon className={`h-5 w-5 ${accent ? "text-primary" : "text-muted-foreground"}`} />
       </div>
-      <p className={`text-3xl font-bold font-mono ${accent ? "text-primary" : ""}`}>{value}</p>
+      <p className={`text-3xl font-bold ${accent ? "text-primary" : ""}`}>{value}</p>
       <p className="text-sm text-muted-foreground mt-1">{label}</p>
     </div>
   );

@@ -7,10 +7,80 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Plus, Pencil, Trash2, Loader2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, GripVertical } from "lucide-react";
 import type { Experience } from "@shared/schema";
 import type { EditingExperience } from "@/types/admin";
 import { EMPTY_EXPERIENCE } from "@/types/admin";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
+function SortableExperienceItem({ 
+  experience: e, 
+  onEdit, 
+  onDelete 
+}: { 
+  experience: Experience; 
+  onEdit: () => void; 
+  onDelete: () => void; 
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+  } = useSortable({ id: e.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="flex items-center justify-between gap-3 bg-card/40 rounded-md border border-border/30 p-4"
+    >
+      <div 
+        className="cursor-move text-muted-foreground hover:text-foreground shrink-0 touch-none p-1"
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical className="h-5 w-5" />
+      </div>
+      <div className="flex-1 min-w-0" data-testid={`admin-experience-${e.id}`}>
+        <p className="font-medium">{e.role?.pt ?? ""}</p>
+        <p className="text-xs text-muted-foreground">{e.role?.en ?? ""}</p>
+        <p className="text-sm text-muted-foreground mt-0.5">{e.company} | {e.startDate} — {e.endDate || "Present"}</p>
+      </div>
+      <div className="flex items-center gap-1 shrink-0">
+        <Button size="icon" variant="ghost" onClick={onEdit} data-testid={`button-edit-experience-${e.id}`}>
+          <Pencil className="h-4 w-4" />
+        </Button>
+        <Button size="icon" variant="ghost" onClick={onDelete} data-testid={`button-delete-experience-${e.id}`}>
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 
 export function ExperiencesTab() {
   const { t } = useI18n();
@@ -28,6 +98,7 @@ export function ExperiencesTab() {
         endDate: data.endDate || null,
         description: { pt: data.descriptionPt, en: data.descriptionEn },
         achievements: { pt: data.achievementsPt, en: data.achievementsEn },
+        order: data.order ?? experiences?.length ?? 0,
       };
       if (data.id) {
         await apiRequest("PATCH", `/api/admin/experiences/${data.id}`, body);
@@ -63,10 +134,54 @@ export function ExperiencesTab() {
       descriptionEn: e.description?.en ?? "",
       achievementsPt: e.achievements?.pt ?? "",
       achievementsEn: e.achievements?.en ?? "",
+      order: e.order,
     });
 
   const update = (patch: Partial<EditingExperience>) =>
     setEditing((prev) => prev ? { ...prev, ...patch } : prev);
+
+  const reorderExperiences = useMutation({
+    mutationFn: (items: { id: number; order: number }[]) => 
+      apiRequest("PATCH", "/api/admin/experiences/reorder", items),
+    onSuccess: () => {
+      // Background revalidation is enough since optimistic update was applied
+      queryClient.invalidateQueries({ queryKey: ["/api/experiences"] });
+      toast({ title: "Ordem atualizada com sucesso!" });
+    },
+    onError: () => {
+      toast({ title: "Erro ao atualizar a ordem", variant: "destructive" });
+      queryClient.invalidateQueries({ queryKey: ["/api/experiences"] });
+    },
+  });
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id && experiences) {
+      const oldIndex = experiences.findIndex((x) => x.id === active.id);
+      const newIndex = experiences.findIndex((x) => x.id === over.id);
+
+      const newItems = arrayMove(experiences, oldIndex, newIndex);
+      
+      // Update local state optimistically
+      queryClient.setQueryData(["/api/experiences"], newItems);
+
+      // Construct ordered array and mutate backend
+      const updates = newItems.map((item, index) => ({
+        id: item.id,
+        order: index,
+      }));
+
+      reorderExperiences.mutate(updates);
+    }
+  };
 
   return (
     <>
@@ -142,25 +257,27 @@ export function ExperiencesTab() {
         </div>
       )}
 
-      <div className="space-y-3">
-        {experiences?.map((e) => (
-          <div key={e.id} className="flex items-center justify-between gap-3 bg-card/40 rounded-md border border-border/30 p-4" data-testid={`admin-experience-${e.id}`}>
-            <div className="flex-1 min-w-0">
-              <p className="font-medium">{e.role?.pt ?? ""}</p>
-              <p className="text-xs text-muted-foreground">{e.role?.en ?? ""}</p>
-              <p className="text-sm text-muted-foreground mt-0.5">{e.company} | {e.startDate} — {e.endDate || "Present"}</p>
-            </div>
-            <div className="flex items-center gap-1 shrink-0">
-              <Button size="icon" variant="ghost" onClick={() => startEditing(e)} data-testid={`button-edit-experience-${e.id}`}>
-                <Pencil className="h-4 w-4" />
-              </Button>
-              <Button size="icon" variant="ghost" onClick={() => deleteExperience.mutate(e.id)} data-testid={`button-delete-experience-${e.id}`}>
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        ))}
-      </div>
+      <DndContext 
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
+        <div className="space-y-3">
+          <SortableContext 
+            items={experiences?.map(e => e.id) || []}
+            strategy={verticalListSortingStrategy}
+          >
+            {experiences?.map((e) => (
+              <SortableExperienceItem 
+                key={e.id}
+                experience={e}
+                onEdit={() => startEditing(e)}
+                onDelete={() => deleteExperience.mutate(e.id)}
+              />
+            ))}
+          </SortableContext>
+        </div>
+      </DndContext>
     </>
   );
 }

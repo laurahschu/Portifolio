@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage.js";
 import { insertMessageSchema, insertProjectSchema, insertSkillSchema, insertExperienceSchema, insertProfileSchema } from "../shared/schema.js";
 import { signToken, verifyToken, requireAdmin } from "./auth.js";
+import { z } from "zod";
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin123";
 
@@ -131,6 +132,16 @@ export async function registerRoutes(
     if (!parsed.success) return res.status(400).json({ message: "Invalid data" });
     const experience = await storage.createExperience(parsed.data);
     res.json(experience);
+  });
+
+  app.patch("/api/admin/experiences/reorder", requireAdmin, async (req: Request, res: Response) => {
+    const defaultSchema = z.array(z.object({ id: z.number(), order: z.number() }));
+    const parsed = defaultSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ message: "Invalid data", errors: parsed.error.flatten() });
+    }
+    await storage.reorderExperiences(parsed.data);
+    res.json({ success: true });
   });
 
   app.patch("/api/admin/experiences/:id", requireAdmin, async (req: Request, res: Response) => {

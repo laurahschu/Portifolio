@@ -49,6 +49,7 @@ export const experiences = pgTable("experiences", {
   endDate: text("end_date"),
   description: jsonb("description").notNull().$type<LocalizedText>(),
   achievements: jsonb("achievements").notNull().$type<LocalizedText>().default({ pt: "", en: "" }),
+  order: integer("order").notNull().default(0),
 });
 
 export const messages = pgTable("messages", {
@@ -66,6 +67,12 @@ export const profile = pgTable("profile", {
   id: serial("id").primaryKey(),
   bio: jsonb("bio").notNull().$type<LocalizedText>(),
   aboutMe: jsonb("about_me").notNull().$type<LocalizedText>().default({ pt: "", en: "" }),
+});
+
+export const clients = pgTable("clients", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  logoUrl: text("logo_url").notNull(),
 });
 
 // ---------------------------------------------------------------------------
@@ -93,6 +100,7 @@ export const insertExperienceSchema = z.object({
   endDate: z.string().nullable().optional(),
   description: localizedText,
   achievements: localizedText,
+  order: z.number().int().optional().default(0),
 });
 
 export const insertProfileSchema = z.object({

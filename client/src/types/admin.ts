@@ -43,6 +43,7 @@ export interface EditingExperience {
   descriptionEn: string;
   achievementsPt: string;
   achievementsEn: string;
+  order?: number;
 }
 
 /** Estado inicial vazio para um novo projeto. */
@@ -57,5 +58,5 @@ export const EMPTY_PROJECT: EditingProject = {
 /** Estado inicial vazio para uma nova experiência. */
 export const EMPTY_EXPERIENCE: EditingExperience = {
   company: "", rolePt: "", roleEn: "", startDate: "", endDate: "",
-  descriptionPt: "", descriptionEn: "", achievementsPt: "", achievementsEn: "",
+  descriptionPt: "", descriptionEn: "", achievementsPt: "", achievementsEn: "", order: 0,
 };
